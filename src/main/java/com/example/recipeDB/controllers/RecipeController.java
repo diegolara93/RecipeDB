@@ -1,6 +1,7 @@
 package com.example.recipeDB.controllers;
 
 
+import com.example.recipeDB.enums.Ingredient;
 import com.example.recipeDB.enums.Tag;
 import com.example.recipeDB.models.Recipe;
 import com.example.recipeDB.repository.RecipeRepository;
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/recipes")
+@RequestMapping("/api/recipes")
 public class RecipeController {
 
     private final RecipeRepository recipeRepository;
@@ -26,8 +27,11 @@ public class RecipeController {
         @RequestParam Integer servings,
         @RequestParam Integer difficulty,
         @RequestParam String steps,
-        @RequestParam Tag tag
+        @RequestParam List<Tag> tags,
+        @RequestParam String imageUrl,
+        @RequestParam List<Ingredient> ingredients
     ) {
+        List<String> recipeOwners = List.of("Jackson", "Mark", "Alex", "Diego");
         Recipe recipe = new Recipe();
         recipe.setTitle(title);
         recipe.setDescription(description);
@@ -37,7 +41,11 @@ public class RecipeController {
         recipe.setDifficulty(difficulty);
         recipe.setUpvotes(0);
         recipe.setSteps(steps);
-        recipe.setTag(tag);
+        recipe.setTag(tags);
+        recipe.setImageUrl(imageUrl);
+        recipe.setIngredients(ingredients);
+        int r = (int) (Math.random() * recipeOwners.size());
+        recipe.setRecipeOwner(recipeOwners.get(r));
         recipeRepository.save(recipe);
         return "Recipe created";
     }
@@ -46,6 +54,13 @@ public class RecipeController {
     public Iterable<Recipe> getAllRecipes() {
         return recipeRepository.findAll();
     }
+
+//    @DeleteMapping("/clear")
+//    public String clearRecipes() {
+//        recipeRepository.deleteAll();
+//        return "All recipes cleared";
+//    }
+
     @GetMapping("/tag/{tag}")
     public List<Recipe> getRecipesByTag(@PathVariable Tag tag) {
         return recipeRepository.findByTag(tag);

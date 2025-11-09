@@ -1,49 +1,13 @@
 package com.example.recipeDB.models;
 
 
+import com.example.recipeDB.enums.Ingredient;
 import com.example.recipeDB.enums.Tag;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
-
-enum Ingredient {
-    SUGAR,
-    SALT,
-    FLOUR,
-    BUTTER,
-    EGGS,
-    MILK,
-    CHICKEN,
-    BEEF,
-    RICE,
-    PASTA,
-    TOMATOES,
-    ONIONS,
-    GARLIC,
-    PEPPER,
-    CHEESE,
-    LETTUCE,
-    CARROTS,
-    POTATOES,
-    CUCUMBERS,
-    OLIVE_OIL,
-    VINEGAR,
-    CHOCOLATE,
-    HONEY,
-    VANILLA,
-    CINNAMON,
-    BASIL,
-    OREGANO,
-    BREAD,
-    SHRIMP,
-    HALIBUT,
-    SPINACH,
-    SALMON,
-    MUSHROOMS,
-    PEAS
-}
 
 @Entity
 @Getter
@@ -61,11 +25,19 @@ public class Recipe {
     private Integer cookTime;
     private Integer servings;
     private Integer difficulty;
-    private Integer upvotes;
+    // set default value to 0
+    private Integer upvotes = 0;
+
+    @Column(length = 5000)
     private String steps;
 
-    @Column(nullable = false)
-    private Tag tag;
+
+    private String recipeOwner;
+
+    private String imageUrl;
+
+    @ElementCollection
+    private List<Tag> tag;
 
     @ElementCollection
     private List<Ingredient> ingredients;
