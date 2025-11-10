@@ -3,6 +3,7 @@ package com.example.recipeDB.models;
 
 import com.example.recipeDB.enums.Ingredient;
 import com.example.recipeDB.enums.Tag;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,14 +32,20 @@ public class Recipe {
     @Column(length = 5000)
     private String steps;
 
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
+    private User owner;
 
-    private String recipeOwner;
+//    private String recipeOwner;
 
     private String imageUrl;
 
     @ElementCollection
-    private List<Tag> tag;
+    @Enumerated(EnumType.STRING)
+    private List<Tag> tags;
 
     @ElementCollection
+    @Enumerated(EnumType.STRING)
     private List<Ingredient> ingredients;
 }
