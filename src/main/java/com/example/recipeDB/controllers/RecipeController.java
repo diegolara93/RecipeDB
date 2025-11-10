@@ -1,6 +1,7 @@
 package com.example.recipeDB.controllers;
 
 
+import com.example.recipeDB.dto.RecipeDTO;
 import com.example.recipeDB.enums.Ingredient;
 import com.example.recipeDB.enums.Tag;
 import com.example.recipeDB.models.Recipe;
@@ -58,8 +59,24 @@ public class RecipeController {
     }
 
     @GetMapping("/all")
-    public Iterable<Recipe> getAllRecipes() {
-        return recipeRepository.findAll();
+    public List<RecipeDTO> all() {
+        return recipeRepository.findAll().stream()
+                .map(r -> new RecipeDTO(
+                        r.getRecipeID(),
+                        r.getTitle(),
+                        r.getDescription(),
+                        r.getPrepTime(),
+                        r.getCookTime(),
+                        r.getServings(),
+                        r.getDifficulty(),
+                        r.getUpvotes(),
+                        r.getSteps(),
+                        r.getImageUrl(),
+                        r.getTags(),
+                        r.getIngredients(),
+                        r.getOwner() != null ? r.getOwner().getUsername() : null
+                ))
+                .toList();
     }
 
     @GetMapping("/u/{userID}")
