@@ -20,7 +20,13 @@ import java.util.List;
 )
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    // TODO: later we can get rid of this and use generation auto, this was to match the SQL scripts
+    @SequenceGenerator(
+            name = "users_seq_gen",
+            sequenceName = "users_seq",
+            allocationSize = 1
+    )
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "users_seq_gen")
     private Integer userID;
 
     @Column(name = "username", nullable = false)

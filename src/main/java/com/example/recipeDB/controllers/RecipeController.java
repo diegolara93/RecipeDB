@@ -8,6 +8,7 @@ import com.example.recipeDB.models.Recipe;
 import com.example.recipeDB.models.User;
 import com.example.recipeDB.repository.RecipeRepository;
 import com.example.recipeDB.repository.UserRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -84,6 +85,55 @@ public class RecipeController {
         User user = userRepository.findById(userID).orElse(null);
         assert user != null;
         return user.getRecipes();
+    }
+
+    @PutMapping("/r/{recipeID}/edit")
+    public ResponseEntity<Recipe> editRecipe(
+            @PathVariable int recipeID,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) Integer prepTime,
+            @RequestParam(required = false) Integer cookTime,
+            @RequestParam(required = false) Integer servings,
+            @RequestParam(required = false) Integer difficulty,
+            @RequestParam(required = false) String steps,
+            @RequestParam(required = false) List<Tag> tags,
+            @RequestParam(required = false) String imageUrl,
+            @RequestParam(required = false) List<Ingredient> ingredients
+    ) {
+        /*
+        TODO:
+        Once auth is added, check that the recipe belongs to the user, else deny edit
+         */
+        Recipe recipe = recipeRepository.findById(recipeID).orElse(null);
+        if (recipe == null) {
+            return ResponseEntity.notFound().build();
+        }
+        if(title != null) recipe.setTitle(title);
+        if(description != null) recipe.setDescription(description);
+        if(prepTime != null) recipe.setPrepTime(prepTime);
+        if(cookTime != null) recipe.setCookTime(cookTime);
+        if(servings != null) recipe.setServings(servings);
+        if(difficulty != null) recipe.setDifficulty(difficulty);
+        if(steps != null) recipe.setSteps(steps);
+        if(tags != null) recipe.setTags(tags);
+        if(imageUrl != null) recipe.setImageUrl(imageUrl);
+        if(ingredients != null) recipe.setIngredients(ingredients);
+
+        recipeRepository.save(recipe);
+        return ResponseEntity.ok(recipe);
+    }
+
+    @DeleteMapping("/r/{recipeID}/delete")
+    public ResponseEntity<Recipe> deleteRecipe(
+            @PathVariable int recipeID
+    ) {
+        Recipe recipe = recipeRepository.findById(recipeID).orElse(null);
+        if (recipe == null) {
+            return ResponseEntity.notFound().build();
+        }
+        recipeRepository.delete(recipe);
+        return ResponseEntity.ok(recipe);
     }
 //    @DeleteMapping("/clear")
 //    public String clearRecipes() {

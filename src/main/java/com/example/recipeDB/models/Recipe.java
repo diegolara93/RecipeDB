@@ -18,7 +18,13 @@ import java.util.List;
 )
 public class Recipe {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    // TODO: later we can get rid of this and use generation auto, this was to match the SQL scripts
+    @SequenceGenerator(
+            name = "recipes_seq_gen",
+            sequenceName = "recipes_seq",
+            allocationSize = 1 //
+    )
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "recipes_seq_gen")
     private Integer recipeID;
     private String title;
     private String description;
