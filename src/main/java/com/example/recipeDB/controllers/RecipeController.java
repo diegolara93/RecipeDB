@@ -9,6 +9,8 @@ import com.example.recipeDB.models.User;
 import com.example.recipeDB.repository.RecipeRepository;
 import com.example.recipeDB.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +26,7 @@ public class RecipeController {
         this.userRepository = userRepository;
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/create")
     public String createRecipe(
         @RequestParam String title,
@@ -36,11 +39,11 @@ public class RecipeController {
         @RequestParam List<Tag> tags,
         @RequestParam String imageUrl,
         @RequestParam List<Ingredient> ingredients,
-        @RequestParam int userID
+        Authentication auth
     ) {
-        List<String> recipeOwners = List.of("Jackson", "Mark", "Alex", "Diego");
         Recipe recipe = new Recipe();
-        User user = userRepository.findById(userID).orElse(null);
+        User user = userRepository.findByUsername(auth.getName())
+                .orElseThrow( () -> new IllegalStateException("User not found"));
 
         recipe.setTitle(title);
         recipe.setDescription(description);
@@ -53,7 +56,6 @@ public class RecipeController {
         recipe.setTags(tags);
         recipe.setImageUrl(imageUrl);
         recipe.setIngredients(ingredients);
-        int r = (int) (Math.random() * recipeOwners.size());
         recipe.setOwner(user);
         recipeRepository.save(recipe);
         return "Recipe created";
@@ -105,10 +107,9 @@ public class RecipeController {
         TODO:
         Once auth is added, check that the recipe belongs to the user, else deny edit
          */
-        Recipe recipe = recipeRepository.findById(recipeID).orElse(null);
-        if (recipe == null) {
-            return ResponseEntity.notFound().build();
-        }
+        Recipe recipe = recipeRepository.findById(recipeID).orElseThrow(
+                () -> new IllegalStateException("Recipe with ID " + recipeID + " does not exist.")
+        );
         if(title != null) recipe.setTitle(title);
         if(description != null) recipe.setDescription(description);
         if(prepTime != null) recipe.setPrepTime(prepTime);
