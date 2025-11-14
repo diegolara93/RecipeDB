@@ -2,6 +2,8 @@ package com.example.recipeDB.dto;
 
 import com.example.recipeDB.enums.Ingredient;
 import com.example.recipeDB.enums.Tag;
+import com.example.recipeDB.models.Comment;
+
 import java.util.List;
 
 public record RecipeDTO(
@@ -17,5 +19,6 @@ public record RecipeDTO(
         String imageUrl,
         List<Tag> tags,
         List<Ingredient> ingredients,
-        String ownerUsername
+        String ownerUsername,
+        List<CommentDTO> comments
 ) {}

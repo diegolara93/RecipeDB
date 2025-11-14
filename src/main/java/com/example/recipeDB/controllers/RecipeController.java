@@ -1,9 +1,12 @@
 package com.example.recipeDB.controllers;
 
 
+import com.example.recipeDB.dto.CommentDTO;
 import com.example.recipeDB.dto.RecipeDTO;
 import com.example.recipeDB.enums.Ingredient;
 import com.example.recipeDB.enums.Tag;
+import com.example.recipeDB.helper.Utils;
+import com.example.recipeDB.models.Comment;
 import com.example.recipeDB.models.Recipe;
 import com.example.recipeDB.models.User;
 import com.example.recipeDB.repository.RecipeRepository;
@@ -64,29 +67,16 @@ public class RecipeController {
     @GetMapping("/all")
     public List<RecipeDTO> all() {
         return recipeRepository.findAll().stream()
-                .map(r -> new RecipeDTO(
-                        r.getRecipeID(),
-                        r.getTitle(),
-                        r.getDescription(),
-                        r.getPrepTime(),
-                        r.getCookTime(),
-                        r.getServings(),
-                        r.getDifficulty(),
-                        r.getUpvotes(),
-                        r.getSteps(),
-                        r.getImageUrl(),
-                        r.getTags(),
-                        r.getIngredients(),
-                        r.getOwner() != null ? r.getOwner().getUsername() : null
-                ))
-                .toList();
+                .map(Utils::mapToRecipeDTO).toList();
     }
 
-    @GetMapping("/u/{userID}")
-    public List<Recipe> getRecipesByUser(@PathVariable int userID) {
-        User user = userRepository.findById(userID).orElse(null);
+    @GetMapping("/u/{username}")
+    public List<RecipeDTO> getRecipesByUsername(@PathVariable String username) {
+        User user = userRepository.findByUsername(username).orElse(null);
         assert user != null;
-        return user.getRecipes();
+        return user.getRecipes().stream().map(
+                Utils::mapToRecipeDTO
+        ).toList();
     }
 
     @PreAuthorize("@recipeSecurityService.isOwner(#recipeID, authentication)")
@@ -134,15 +124,42 @@ public class RecipeController {
         recipeRepository.delete(recipe);
         return ResponseEntity.ok("Deleted recipe with ID " + recipeID);
     }
-//    @DeleteMapping("/clear")
-//    public String clearRecipes() {
-//        recipeRepository.deleteAll();
-//        return "All recipes cleared";
-//    }
 
     @GetMapping("/tags")
     public List<Recipe> getByTags(@RequestParam List<Tag> tags) {
         if (tags == null || tags.isEmpty()) return List.of();
         return recipeRepository.findDistinctByTagsIn(tags);
     }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/r/{recipeID}/comment")
+    public ResponseEntity<CommentDTO> addComment(
+            @PathVariable int recipeID,
+            @RequestParam String text,
+            Authentication auth
+    ) {
+        Recipe recipe = recipeRepository.findById(recipeID).orElseThrow(
+                () -> new IllegalStateException("Recipe with ID " + recipeID + " does not exist.")
+        );
+        User user = userRepository.findByUsername(auth.getName())
+                .orElseThrow( () -> new IllegalStateException("User not found"));
+
+        Comment comment = new Comment();
+        comment.setText(text);
+        comment.setRecipe(recipe);
+        comment.setAuthor(user);
+
+        recipe.getComments().add(comment);
+        recipeRepository.save(recipe);
+
+        CommentDTO response = new CommentDTO(
+                comment.getId(),
+                comment.getRecipe().getRecipeID(),
+                comment.getText(),
+                comment.getAuthor().getUsername()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
 }
