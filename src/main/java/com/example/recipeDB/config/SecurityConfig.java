@@ -64,6 +64,7 @@ public class SecurityConfig {
                         .requestMatchers(SWAGGER_WHITELIST).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/recipes/u/**").permitAll()
+                        .requestMatchers("/api/recipes/r/byId/**").permitAll()
                         .requestMatchers("/api/user/create", "/api/recipes/all", "/api/recipes/tags").permitAll()
                         .anyRequest().authenticated()
                 )

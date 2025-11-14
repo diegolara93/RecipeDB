@@ -84,6 +84,14 @@ public class RecipeController {
                 .toList();
     }
 
+    @GetMapping("/r/byId/{recipeID}")
+    public RecipeDTO getRecipeById(@PathVariable int recipeID) {
+        Recipe recipe = recipeRepository.findById(recipeID).orElse(null);
+        assert recipe != null;
+        long upvoteCount = recipeUpvoteRepository.countByRecipe(recipe);
+        return Utils.mapToRecipeDTO(recipe, upvoteCount);
+    }
+
     @GetMapping("/u/{username}")
     public List<RecipeDTO> getRecipesByUsername(@PathVariable String username) {
         User user = userRepository.findByUsername(username).orElse(null);
