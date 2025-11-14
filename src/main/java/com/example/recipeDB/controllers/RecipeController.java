@@ -9,6 +9,7 @@ import com.example.recipeDB.helper.Utils;
 import com.example.recipeDB.models.Comment;
 import com.example.recipeDB.models.Recipe;
 import com.example.recipeDB.models.User;
+import com.example.recipeDB.repository.CommentRepository;
 import com.example.recipeDB.repository.RecipeRepository;
 import com.example.recipeDB.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +25,12 @@ public class RecipeController {
 
     private final RecipeRepository recipeRepository;
     private final UserRepository userRepository;
-    public RecipeController(RecipeRepository recipeRepository, UserRepository userRepository) {
+    private final CommentRepository commentRepository;
+
+    public RecipeController(RecipeRepository recipeRepository, UserRepository userRepository, CommentRepository commentRepository) {
         this.recipeRepository = recipeRepository;
         this.userRepository = userRepository;
+        this.commentRepository = commentRepository;
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -148,15 +152,13 @@ public class RecipeController {
         comment.setText(text);
         comment.setRecipe(recipe);
         comment.setAuthor(user);
-
-        recipe.getComments().add(comment);
-        recipeRepository.save(recipe);
+        Comment saved = commentRepository.save(comment);
 
         CommentDTO response = new CommentDTO(
-                comment.getId(),
-                comment.getRecipe().getRecipeID(),
-                comment.getText(),
-                comment.getAuthor().getUsername()
+                saved.getId(),
+                saved.getRecipe().getRecipeID(),
+                saved.getText(),
+                saved.getAuthor().getUsername()
         );
 
         return ResponseEntity.ok(response);
