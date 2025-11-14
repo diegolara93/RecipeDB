@@ -89,6 +89,7 @@ public class RecipeController {
         return user.getRecipes();
     }
 
+    @PreAuthorize("@recipeSecurityService.isOwner(#recipeID, authentication)")
     @PutMapping("/r/{recipeID}/edit")
     public ResponseEntity<Recipe> editRecipe(
             @PathVariable int recipeID,
@@ -103,10 +104,6 @@ public class RecipeController {
             @RequestParam(required = false) String imageUrl,
             @RequestParam(required = false) List<Ingredient> ingredients
     ) {
-        /*
-        TODO:
-        Once auth is added, check that the recipe belongs to the user, else deny edit
-         */
         Recipe recipe = recipeRepository.findById(recipeID).orElseThrow(
                 () -> new IllegalStateException("Recipe with ID " + recipeID + " does not exist.")
         );
@@ -125,8 +122,9 @@ public class RecipeController {
         return ResponseEntity.ok(recipe);
     }
 
+    @PreAuthorize("@recipeSecurityService.isOwner(#recipeID, authentication)")
     @DeleteMapping("/r/{recipeID}/delete")
-    public ResponseEntity<Recipe> deleteRecipe(
+    public ResponseEntity<?> deleteRecipe(
             @PathVariable int recipeID
     ) {
         Recipe recipe = recipeRepository.findById(recipeID).orElse(null);
@@ -134,7 +132,7 @@ public class RecipeController {
             return ResponseEntity.notFound().build();
         }
         recipeRepository.delete(recipe);
-        return ResponseEntity.ok(recipe);
+        return ResponseEntity.ok("Deleted recipe with ID " + recipeID);
     }
 //    @DeleteMapping("/clear")
 //    public String clearRecipes() {
