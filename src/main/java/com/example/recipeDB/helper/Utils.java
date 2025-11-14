@@ -4,7 +4,7 @@ import com.example.recipeDB.dto.RecipeDTO;
 import com.example.recipeDB.models.Recipe;
 
 public class Utils {
-    public static RecipeDTO mapToRecipeDTO(Recipe recipe) {
+    public static RecipeDTO mapToRecipeDTO(Recipe recipe, long upvoteCount) {
         return new RecipeDTO(
                 recipe.getRecipeID(),
                 recipe.getTitle(),
@@ -13,7 +13,7 @@ public class Utils {
                 recipe.getCookTime(),
                 recipe.getServings(),
                 recipe.getDifficulty(),
-                recipe.getUpvotes(),
+                (int) upvoteCount,
                 recipe.getSteps(),
                 recipe.getImageUrl(),
                 recipe.getTags(),

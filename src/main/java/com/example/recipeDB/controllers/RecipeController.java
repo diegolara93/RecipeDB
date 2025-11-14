@@ -8,10 +8,13 @@ import com.example.recipeDB.enums.Tag;
 import com.example.recipeDB.helper.Utils;
 import com.example.recipeDB.models.Comment;
 import com.example.recipeDB.models.Recipe;
+import com.example.recipeDB.models.RecipeUpvote;
 import com.example.recipeDB.models.User;
 import com.example.recipeDB.repository.CommentRepository;
 import com.example.recipeDB.repository.RecipeRepository;
+import com.example.recipeDB.repository.RecipeUpvoteRepository;
 import com.example.recipeDB.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -26,11 +29,14 @@ public class RecipeController {
     private final RecipeRepository recipeRepository;
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
+    private final RecipeUpvoteRepository recipeUpvoteRepository;
 
-    public RecipeController(RecipeRepository recipeRepository, UserRepository userRepository, CommentRepository commentRepository) {
+    public RecipeController(RecipeRepository recipeRepository, UserRepository userRepository,
+                            CommentRepository commentRepository, RecipeUpvoteRepository recipeUpvoteRepository) {
         this.recipeRepository = recipeRepository;
         this.userRepository = userRepository;
         this.commentRepository = commentRepository;
+        this.recipeUpvoteRepository = recipeUpvoteRepository;
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -71,16 +77,23 @@ public class RecipeController {
     @GetMapping("/all")
     public List<RecipeDTO> all() {
         return recipeRepository.findAll().stream()
-                .map(Utils::mapToRecipeDTO).toList();
+                .map(r -> {
+                    long upvoteCount = recipeUpvoteRepository.countByRecipe(r);
+                    return Utils.mapToRecipeDTO(r, upvoteCount);
+                })
+                .toList();
     }
 
     @GetMapping("/u/{username}")
     public List<RecipeDTO> getRecipesByUsername(@PathVariable String username) {
         User user = userRepository.findByUsername(username).orElse(null);
         assert user != null;
-        return user.getRecipes().stream().map(
-                Utils::mapToRecipeDTO
-        ).toList();
+        return user.getRecipes().stream()
+                .map(r -> {
+                    long upvoteCount = recipeUpvoteRepository.countByRecipe(r);
+                    return Utils.mapToRecipeDTO(r, upvoteCount);
+                })
+                .toList();
     }
 
     @PreAuthorize("@recipeSecurityService.isOwner(#recipeID, authentication)")
@@ -162,6 +175,44 @@ public class RecipeController {
         );
 
         return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @Transactional
+    @PostMapping("/r/{recipeID}/upvote")
+    public ResponseEntity<?> toggleUpvote(
+            @PathVariable int recipeID,
+            Authentication auth
+    ) {
+        Recipe recipe = recipeRepository.findById(recipeID)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Recipe with ID " + recipeID + " not found"));
+
+        User user = userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+        var existingOpt = recipeUpvoteRepository.findByRecipeAndUser(recipe, user);
+
+        final boolean nowUpvoted;
+        if (existingOpt.isPresent()) {
+            recipeUpvoteRepository.delete(existingOpt.get());
+            nowUpvoted = false;
+        } else {
+            RecipeUpvote upvote = new RecipeUpvote();
+            upvote.setRecipe(recipe);
+            upvote.setUser(user);
+            recipeUpvoteRepository.save(upvote);
+            nowUpvoted = true;
+        }
+
+        long newCount = recipeUpvoteRepository.countByRecipe(recipe);
+
+        return ResponseEntity.ok(
+                java.util.Map.of(
+                        "upvotes", newCount,
+                        "upvoted", nowUpvoted
+                )
+        );
     }
 
 }
