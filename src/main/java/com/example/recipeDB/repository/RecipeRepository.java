@@ -13,5 +13,5 @@ public interface RecipeRepository extends CrudRepository<Recipe, Integer> {
     List<Recipe> findDistinctByTagsIn(Collection<Tag> tags);
 
     @EntityGraph(attributePaths = "owner")
-    List<Recipe> findAll(); // ensures owner is loaded
+    List<Recipe> findAll();
 }

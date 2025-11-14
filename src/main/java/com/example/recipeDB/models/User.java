@@ -1,5 +1,6 @@
 package com.example.recipeDB.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -35,10 +36,14 @@ public class User {
     @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(nullable = false)
+    @JsonIgnore
+    @Column(nullable = false, length = 255)
     private String password;
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<Recipe> recipes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
 }

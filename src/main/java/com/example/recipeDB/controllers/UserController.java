@@ -2,17 +2,20 @@ package com.example.recipeDB.controllers;
 
 import com.example.recipeDB.models.User;
 import com.example.recipeDB.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
 @RestController()
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 public class UserController {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserController(UserRepository userRepository) {
+    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
     @PostMapping("/create")
     public String createUser(
@@ -20,9 +23,18 @@ public class UserController {
             @RequestParam String email,
             @RequestParam String password
     ) {
+        if(userRepository.existsByUsername(username)) {
+            return "Username already exists";
+        }
+
+        if(userRepository.existsByEmail(email)) {
+            return "Email already exists";
+        }
+
         User user = new User();
+        String encoded = passwordEncoder.encode(password);
         user.setUsername(username);
-        user.setPassword(password);
+        user.setPassword(encoded);
         user.setEmail(email);
         userRepository.save(user);
         return "User created";
