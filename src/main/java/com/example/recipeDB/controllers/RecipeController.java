@@ -64,7 +64,6 @@ public class RecipeController {
         recipe.setCookTime(cookTime);
         recipe.setServings(servings);
         recipe.setDifficulty(difficulty);
-        recipe.setUpvotes(0);
         recipe.setSteps(steps);
         recipe.setTags(tags);
         recipe.setImageUrl(imageUrl);
@@ -151,9 +150,14 @@ public class RecipeController {
     }
 
     @GetMapping("/tags")
-    public List<Recipe> getByTags(@RequestParam List<Tag> tags) {
+    public List<RecipeDTO> getByTags(@RequestParam List<Tag> tags) {
         if (tags == null || tags.isEmpty()) return List.of();
-        return recipeRepository.findDistinctByTagsIn(tags);
+        return recipeRepository.findDistinctByTagsIn(tags)
+                .stream()
+                .map(r -> {
+                    long upvoteCount = recipeUpvoteRepository.countByRecipe(r);
+                    return Utils.mapToRecipeDTO(r, upvoteCount);
+        }).toList();
     }
 
     @PreAuthorize("isAuthenticated()")
